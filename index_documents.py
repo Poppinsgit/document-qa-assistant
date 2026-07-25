@@ -6,57 +6,44 @@ from langchain_chroma import Chroma
 from embeddings import MyEmbeddings
 
 
-# 1. Read PDF
-pdf_path = "documents/UAE_labour_law.pdf"
+def create_vector_db(pdf_path):
 
-reader = PdfReader(pdf_path)
+    reader = PdfReader(pdf_path)
 
-text = ""
-
-for page in reader.pages:
-    page_text = page.extract_text()
-    if page_text:
-        text += page_text
-
-
-print("Characters:", len(text))
-
-
-# 2. Split text into chunks
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=50
-)
-
-chunks = splitter.split_text(text)
-
-print("Total chunks:", len(chunks))
-
-
-# 3. Convert chunks into LangChain Documents
-documents = []
-
-for i, chunk in enumerate(chunks):
-    documents.append(
-        Document(
-            page_content=chunk,
-            metadata={"chunk_id": i}
-        )
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=50
     )
 
-print("Documents created:", len(documents))
+    all_documents = []
 
+    for page_number, page in enumerate(reader.pages):
 
-# 4. Load embedding model
-embedding_function = MyEmbeddings()
+        page_text = page.extract_text()
 
+        if not page_text:
+            continue
 
-# 5. Store in Chroma
-vector_db = Chroma.from_documents(
-    documents=documents,
-    embedding=embedding_function,
-    persist_directory="vector_db"
-)
+        chunks = splitter.split_text(page_text)
 
+        for i, chunk in enumerate(chunks):
+            all_documents.append(
+                Document(
+                    page_content=chunk,
+                    metadata={
+                        "source": pdf_path,
+                        "page": page_number + 1,
+                        "chunk_id": i
+                    }
+                )
+            )
 
-print("✅ Vector database created!")
+    embedding_function = MyEmbeddings()
+
+    Chroma.from_documents(
+        documents=all_documents,
+        embedding=embedding_function,
+        persist_directory="vector_db"
+    )
+
+    print("✅ Vector DB created!")
