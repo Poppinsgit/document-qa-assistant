@@ -22,21 +22,16 @@ def retrieve_node(state: AgentState):
 
 def generate_node(state: AgentState):
 
-    documents = state["context"]
-
-    # documents are already strings
-    context = "\n\n".join(documents)
-
+    context = state["context"]   
 
     answer = ask_llm(
         state["question"],
         context
     )
 
-
     return {
         "question": state["question"],
-        "context": documents,
+        "context": context,
         "sources": state["sources"],
         "answer": answer
     }
