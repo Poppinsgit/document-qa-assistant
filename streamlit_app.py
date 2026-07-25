@@ -1,7 +1,6 @@
 import streamlit as st
 
-from retriever import get_relevant_chunks
-from llm import ask_llm
+from graph import graph
 
 
 st.set_page_config(
@@ -11,6 +10,7 @@ st.set_page_config(
 
 
 st.title("📄 Document Q&A Assistant")
+
 st.write(
     "Upload a PDF and ask questions from the document."
 )
@@ -33,38 +33,28 @@ if uploaded_file:
 
     if question:
 
-        print("🔎 Retrieving chunks...")
+        with st.spinner("🤖 Thinking..."):
 
-        context, sources = get_relevant_chunks(
-            question
-        )
-
-        print("✅ Retrieval done")
-
-
-        with st.spinner(
-            "🤖 Thinking..."
-        ):
-
-            answer = ask_llm(
-                question,
-                context
+            result = graph.invoke(
+                {
+                    "question": question,
+                    "context": "",
+                    "answer": "",
+                    "sources": []
+                }
             )
 
 
-        st.subheader(
-            "Answer"
-        )
+        st.subheader("Answer")
 
-        st.write(answer)
-
-
-        st.subheader(
-            "📚 Sources"
+        st.write(
+            result["answer"]
         )
 
 
-        for source in sources:
+        st.subheader("📚 Sources")
+
+        for source in result["sources"]:
             st.write(
                 f"📄 {source}"
             )

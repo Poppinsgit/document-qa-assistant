@@ -47,3 +47,5 @@ def create_vector_db(pdf_path):
     )
 
     print("✅ Vector DB created!")
+    if __name__ == "__main__":
+        create_vector_db("documents/UAE_labour_law.pdf")

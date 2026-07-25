@@ -13,7 +13,7 @@ def get_relevant_chunks(question):
 
     results = vector_db.similarity_search(
         question,
-        k=3
+        k=5
     )
 
     context = "\n\n".join(
