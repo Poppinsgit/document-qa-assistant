@@ -1,229 +1,136 @@
-# 📄 Document Q&A Assistant (RAG) - V2
+# Document Q&A Assistant (RAG)
 
-An AI-powered document question-answering system that allows users to upload a PDF and ask questions. The application uses **Retrieval Augmented Generation (RAG)** to retrieve relevant information from documents and generate accurate answers using Google's Gemini LLM.
+An AI-powered document question-answering system built using **Retrieval-Augmented Generation (RAG)**. Upload a PDF, ask questions in plain English, and get answers grounded in the document's actual content — with page-level source citations, so every answer can be traced back to where it came from.
 
----
+This project evolved across three versions, each adding real architectural depth:
 
-## 🚀 Project Overview
-
-Traditional document search requires manually reading through hundreds of pages.
-
-This project solves that problem by creating an AI assistant that can:
-
-- Understand uploaded documents
-- Search relevant information using semantic similarity
-- Generate answers from document context
-- Provide source references
-
-The system follows a complete RAG pipeline:
-PDF Document
-|
-↓
-Text Extraction
-|
-↓
-Text Chunking
-|
-↓
-Embeddings Generation
-|
-↓
-Chroma Vector Database
-|
-↓
-Semantic Retrieval
-|
-↓
-Gemini LLM
-|
-↓
-AI Generated Answer
+```
+V1: Linear RAG pipeline (CLI)
+        ↓
+V2: + Streamlit UI, live upload, source citations
+        ↓
+V3: + LangGraph agentic workflow (retrieve → generate as graph nodes)
+```
 
 ---
 
-# ✨ Features
+## How It Works (V3 Architecture)
 
-## 📄 PDF Processing
-
-- Upload PDF documents
-- Extract text from documents
-- Split large documents into meaningful chunks
-
-## 🔍 Semantic Search
-
-- Converts document chunks into embeddings
-- Stores embeddings in Chroma Vector Database
-- Retrieves the most relevant information for user questions
-
-## 🤖 AI Answer Generation
-
-- Uses Google Gemini LLM
-- Answers questions using only retrieved document context
-- Reduces hallucination by grounding answers in source documents
-
-## 📚 Source References
-
-The system provides document references for retrieved information.
-
-Example:
-Answer:
-Employees are entitled to 30 days annual leave after one year.
-
-Sources:
-📄 UAE_labour_law.pdf
-Page 20
-
----
-
-# 🛠️ Tech Stack
-
-## Programming Language
-
-- Python 3.11
-
-## AI / ML
-
-- Google Gemini API
-- LangChain
-- Sentence Transformers
-
-## Vector Database
-
-- ChromaDB
-
-## Document Processing
-
-- PyPDF
-
-## Frontend
-
-- Streamlit
-
----
-
-# 📂 Project Structure
-document-qa-assistant/
-
-│
-├── streamlit_app.py # Streamlit user interface
-│
-├── index_documents.py # PDF processing and vector creation
-│
-├── embeddings.py # Embedding model configuration
-│
-├── retriever.py # Semantic search logic
-│
-├── llm.py # Gemini LLM integration
-│
-├── documents/
-│ └── sample.pdf
-│
-├── vector_db/ # Chroma vector database
-│
-├── requirements.txt
-│
-├── README.md
-│
-└── .gitignore
-
-
-
----
-
-# ⚙️ Installation
-
-## 1. Clone Repository
-
-```bash
-git clone <repository-url>
-
-cd document-qa-assistant
-2. Create Virtual Environment
-python3.11 -m venv .venv
-
-Activate:
-
-Mac/Linux
-source .venv/bin/activate
-3. Install Dependencies
-pip install -r requirements.txt
-🔑 Environment Setup
-
-Create a .env file:
-
-GOOGLE_API_KEY=your_gemini_api_key
-📚 Create Vector Database
-
-Add your PDF inside:
-
-documents/
-
-Run:
-
-python index_documents.py
-
-This creates:
-
-vector_db/
-
-containing document embeddings.
-
-▶️ Run Application
-
-Start Streamlit:
-
-streamlit run streamlit_app.py
-
-The application will open in your browser.
-
-💡 Example Questions
-
-Using UAE Labour Law PDF:
-
-How many annual leave days are employees entitled to?
-What is Article 75 about?
-What are the employee rights mentioned in the document?
-🧠 How RAG Works in This Project
-
-Instead of sending the entire PDF to an AI model:
-
-User asks a question
-The system converts the question into an embedding
-Chroma searches for similar document chunks
-Relevant context is sent to Gemini
-Gemini generates an answer based only on that context
-🔮 Future Improvements (V3)
-
-The next version will introduce LangGraph Agentic RAG.
-
-Planned improvements:
-
-AI workflow orchestration using LangGraph
-Query rewriting
-Retrieval validation
-Decision-based AI agents
-Better reasoning pipeline
-Conversation memory
-
-Architecture:
-
+```
 User Question
-      |
       ↓
 LangGraph Workflow
-      |
       ↓
-Retrieve Documents
-      |
+retrieve_node → semantic search (ChromaDB) → relevant chunks
       ↓
-Evaluate Context
-      |
+generate_node → Gemini LLM → grounded answer
       ↓
-Generate Answer
-👩‍💻 Author
+Answer + Source Citations (filename + page number)
+```
 
-Shaik Afreen
+The retrieval and generation steps are implemented as explicit graph nodes with a shared typed state (`AgentState`), rather than a single linear script — the foundation for future extensions like query rewriting, retrieval validation, or multi-step reasoning.
 
-AI Engineer | Full Stack Developer
+---
 
-Building intelligent systems using Generative AI, RAG, and Agentic AI.
+## Version History
+
+### V1 — Core RAG Pipeline
+- PDF text extraction and chunking
+- Embedding generation (Sentence Transformers)
+- Vector storage and semantic search (ChromaDB)
+- Answer generation grounded in retrieved context (Gemini via LangChain)
+- Command-line interface
+
+### V2 — Usable Application
+- Streamlit web interface with live PDF upload and indexing
+- Source citations (filename + page number) for every answer
+- Cleaner, single-responsibility LLM integration
+
+### V3 — Agentic Workflow (LangGraph)
+- Migrated from a linear script to a **LangGraph state graph**: `retrieve_node` → `generate_node`, connected via typed state (`AgentState`)
+- Sets up the architecture for agentic extensions — conditional routing, retrieval validation, and multi-step reasoning in future iterations
+- Error-handled LLM calls (graceful failure instead of a crash if the API errors)
+
+---
+
+## Tech Stack
+
+- Python 3.11
+- LangChain / LangGraph
+- ChromaDB (vector database)
+- Sentence Transformers (embeddings)
+- Google Gemini API (LLM)
+- Streamlit (interface)
+- PyPDF (document parsing)
+
+---
+
+## Project Structure
+
+```
+document-qa-assistant/
+├── streamlit_app.py       # Streamlit UI, invokes the LangGraph workflow
+├── graph.py                # LangGraph state graph definition
+├── nodes.py                 # retrieve_node and generate_node implementations
+├── state.py                 # Shared AgentState (TypedDict)
+├── index_documents.py       # PDF processing, chunking, vector DB creation
+├── retriever.py              # Semantic search against ChromaDB
+├── embeddings.py              # Embedding model configuration
+├── llm.py                      # Gemini LLM integration, with error handling
+├── documents/                   # Uploaded/indexed PDFs
+├── vector_db/                    # Chroma vector database (generated)
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## Setup
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Create a `.env` file:
+```
+GOOGLE_API_KEY=your_gemini_api_key
+```
+
+Run the app:
+```bash
+streamlit run streamlit_app.py
+```
+Upload a PDF, ask a question, and the app will index the document and answer using only its content.
+
+---
+
+## Example
+
+**Question:** How many annual leave days are employees entitled to?
+
+**Answer:** According to Article 75 of UAE Labour Law, employees are entitled to 30 days annual leave after completing more than one year of service.
+
+**Sources:** 📄 UAE_labour_law.pdf | Page 20
+
+---
+
+## What This Project Demonstrates
+
+- End-to-end RAG system design: chunking, embeddings, vector search, grounded generation
+- Practical experience migrating a linear pipeline to a LangGraph-based agentic workflow
+- Iterative, versioned development — each release adds a genuine architectural capability, not just surface changes
+
+## Future Improvements
+
+- Conditional routing and retrieval validation as explicit graph nodes
+- Multi-document support with cross-document citation
+- Conversation memory across multiple questions
+- Query rewriting for improved retrieval accuracy
+
+---
+
+## Author
+
+Shaik Afreen Banu
+AI/ML Engineer | Full Stack Developer
